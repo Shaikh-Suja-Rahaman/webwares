@@ -3,6 +3,7 @@ package com.suja.webwares.controller;
 
 import com.suja.webwares.model.Product;
 import com.suja.webwares.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,8 +17,9 @@ public class ProductController {
         this.productService = productService;
     }
 
+
     @PostMapping
-    public Product createProduct(@RequestBody Product product){
+    public Product createProduct(@Valid @RequestBody Product product){
         return productService.createProduct(product);
     }
 
