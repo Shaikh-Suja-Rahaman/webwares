@@ -1,0 +1,7 @@
+spring:
+  application:
+    name:
+      webwares
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/webwares
