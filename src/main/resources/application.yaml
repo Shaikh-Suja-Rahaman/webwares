@@ -1,7 +1,50 @@
 spring:
   application:
-    name:
-      webwares
+    name: webwares
   data:
     mongodb:
       uri: mongodb://localhost:27017/webwares
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:sujarahaman157@gmail.com}
+    password: ${MAIL_PASSWORD:change-me}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  cache:
+    type: caffeine
+    cache-names: product-by-id, product-list
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=10m
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:9f2c4e6d7a8b9c0d1e2f3a4b5c6d7e8f9f2c4e6d7a8b9c0d1e2f3a4b5c6d7e8f}
+    issuer: ${JWT_ISSUER:webwares}
+    expiration-minutes: 60
+
+app:
+  admin:
+    # Admin Seeder Credentials
+    # Set these in environment variables: ADMIN_EMAIL, ADMIN_PASSWORD
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID:rzp_test_RqJeFkIbBlROTt}
+  secret: ${RAZORPAY_SECRET:bv0W2sadIuss3y3DwHbv2BPo}
+
+server:
+  error:
+    include-message: always
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    try-it-out-enabled: true
