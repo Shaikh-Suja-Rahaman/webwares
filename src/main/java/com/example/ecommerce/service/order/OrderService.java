@@ -8,11 +8,13 @@ import com.example.ecommerce.exception.custom.ResourceNotFoundException;
 import com.example.ecommerce.model.Cart;
 import com.example.ecommerce.model.Order;
 import com.example.ecommerce.model.Product;
+import com.example.ecommerce.model.User;
 import com.example.ecommerce.model.embedded.OrderItem;
 import com.example.ecommerce.model.enums.OrderStatus;
 import com.example.ecommerce.repository.CartRepository;
 import com.example.ecommerce.repository.OrderRepository;
 import com.example.ecommerce.repository.ProductRepository;
+import com.example.ecommerce.repository.UserRepository;
 import com.example.ecommerce.service.app.EmailService;
 import com.example.ecommerce.service.payment.PaymentService;
 import org.springframework.stereotype.Service;
@@ -30,23 +32,29 @@ public class OrderService {
     private final PaymentService paymentService;
     private final OrderMapper orderMapper;
     private final EmailService emailService;
+    private final UserRepository userRepository;
 
     public OrderService(CartRepository cartRepository,
             ProductRepository productRepository,
             OrderRepository orderRepository,
             PaymentService paymentService,
             OrderMapper orderMapper,
-            EmailService emailService) {
+            EmailService emailService,
+            UserRepository userRepository) {
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.paymentService = paymentService;
         this.orderMapper = orderMapper;
         this.emailService = emailService;
+        this.userRepository = userRepository;
     }
 
     @Transactional
     public OrderResponse placeOrder(String userId, PlaceOrderRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
         if (cart.getItems().isEmpty()) {
@@ -88,8 +96,8 @@ public class OrderService {
         cartRepository.save(cart);
 
         try {
-            emailService.send(userId, "Order Placed",
-                    "Your order " + order.getId() + " is created with total " + total);
+            emailService.send(user.getEmail(), "Order Placed - webwares",
+                    "Hi " + user.getName() + ", your order " + order.getId() + " was created with total INR " + total);
         } catch (Exception e) {
             System.err.println("Failed to send order email: " + e.getMessage());
         }
