@@ -51,9 +51,10 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse placeOrder(String userId, PlaceOrderRequest request) {
-        User user = userRepository.findById(userId)
+    public OrderResponse placeOrder(String userEmail, PlaceOrderRequest request) {
+        User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        String userId = user.getId();
 
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
@@ -104,8 +105,10 @@ public class OrderService {
         return orderMapper.toResponse(order);
     }
 
-    public List<OrderResponse> userOrders(String userId) {
-        return orderRepository.findByUserId(userId).stream()
+    public List<OrderResponse> userOrders(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return orderRepository.findByUserId(user.getId()).stream()
                 .map(orderMapper::toResponse)
                 .collect(Collectors.toList());
     }
