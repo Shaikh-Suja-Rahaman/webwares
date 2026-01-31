@@ -10,6 +10,7 @@ import com.example.ecommerce.model.Product;
 import com.example.ecommerce.model.embedded.CartItem;
 import com.example.ecommerce.repository.CartRepository;
 import com.example.ecommerce.repository.ProductRepository;
+import com.example.ecommerce.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,24 +22,23 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
-    public CartService(CartRepository cartRepository, ProductRepository productRepository) {
+    public CartService(CartRepository cartRepository, ProductRepository productRepository, UserRepository userRepository) {
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
-    public CartResponse addItem(String userId, AddCartItemRequest request) {
+    public CartResponse addItem(String userEmail, AddCartItemRequest request) {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         if (request.getQuantity() > product.getStock()) {
             throw new BadRequestException("Insufficient stock");
         }
-        Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> {
-            Cart c = new Cart();
-            c.setUserId(userId);
-            return c;
-        });
+        String userId = resolveUserId(userEmail);
+        Cart cart = findOrMigrateCart(userId, userEmail);
         List<CartItem> items = new ArrayList<>(cart.getItems());
         CartItem existing = items.stream().filter(i -> i.getProductId().equals(product.getId())).findFirst().orElse(null);
         if (existing == null) {
@@ -55,9 +55,9 @@ public class CartService {
     }
 
     @Transactional
-    public CartResponse updateQuantity(String userId, String productId, int quantity) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+    public CartResponse updateQuantity(String userEmail, String productId, int quantity) {
+        String userId = resolveUserId(userEmail);
+        Cart cart = findOrMigrateCart(userId, userEmail);
         cart.getItems().stream()
                 .filter(i -> i.getProductId().equals(productId))
                 .findFirst()
@@ -68,21 +68,50 @@ public class CartService {
     }
 
     @Transactional
-    public CartResponse removeItem(String userId, String productId) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+    public CartResponse removeItem(String userEmail, String productId) {
+        String userId = resolveUserId(userEmail);
+        Cart cart = findOrMigrateCart(userId, userEmail);
         cart.getItems().removeIf(i -> i.getProductId().equals(productId));
         cartRepository.save(cart);
         return toResponse(cart);
     }
 
-    public CartResponse getCart(String userId) {
-        Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> {
-            Cart c = new Cart();
-            c.setUserId(userId);
-            return c;
-        });
+    public CartResponse getCart(String userEmail) {
+        String userId = resolveUserId(userEmail);
+        Cart cart = findOrCreateCart(userId, userEmail);
         return toResponse(cart);
+    }
+
+    private String resolveUserId(String userEmail) {
+        return userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"))
+                .getId();
+    }
+
+    private Cart findOrCreateCart(String userId, String userEmail) {
+        return cartRepository.findByUserId(userId)
+                .or(() -> cartRepository.findByUserId(userEmail)) // migrate old carts stored by email
+                .map(cart -> {
+                    if (!cart.getUserId().equals(userId)) {
+                        cart.setUserId(userId);
+                        cartRepository.save(cart);
+                    }
+                    return cart;
+                })
+                .orElseGet(() -> {
+                    Cart c = new Cart();
+                    c.setUserId(userId);
+                    return c;
+                });
+    }
+
+    private Cart findOrMigrateCart(String userId, String userEmail) {
+        Cart cart = findOrCreateCart(userId, userEmail);
+        if (cart.getUserId().equals(userEmail)) {
+            cart.setUserId(userId);
+            cart = cartRepository.save(cart);
+        }
+        return cart;
     }
 
     private CartResponse toResponse(Cart cart) {
@@ -103,4 +132,3 @@ public class CartService {
         return resp;
     }
 }
-

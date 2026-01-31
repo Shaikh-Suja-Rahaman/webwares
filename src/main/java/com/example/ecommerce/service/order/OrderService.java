@@ -57,6 +57,14 @@ public class OrderService {
         String userId = user.getId();
 
         Cart cart = cartRepository.findByUserId(userId)
+                .or(() -> cartRepository.findByUserId(userEmail)) // migrate legacy carts saved with email
+                .map(c -> {
+                    if (!c.getUserId().equals(userId)) {
+                        c.setUserId(userId);
+                        cartRepository.save(c);
+                    }
+                    return c;
+                })
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
         if (cart.getItems().isEmpty()) {
             throw new BadRequestException("Cart is empty");
