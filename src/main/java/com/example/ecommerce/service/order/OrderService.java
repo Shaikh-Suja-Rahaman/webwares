@@ -102,6 +102,20 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    public List<OrderResponse> allOrders() {
+        return orderRepository.findAll().stream()
+                .map(orderMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public OrderResponse updateStatus(String orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        order.setStatus(newStatus);
+        orderRepository.save(order);
+        return orderMapper.toResponse(order);
+    }
+
     public OrderResponse getById(String id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));

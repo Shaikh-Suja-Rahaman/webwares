@@ -3,7 +3,9 @@ spring:
     name: webwares
   data:
     mongodb:
-      uri: mongodb://localhost:27017/webwares
+      # Use env var to avoid committing credentials. Example:
+      # export MONGODB_URI="mongodb+srv://suja:<PASSWORD>@webwares-cluster.v4qgcwg.mongodb.net/webwares?retryWrites=true&w=majority&appName=Webwares-Cluster"
+      uri: ${MONGODB_URI}
   mail:
     host: smtp.gmail.com
     port: 587
