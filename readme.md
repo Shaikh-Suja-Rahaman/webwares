@@ -71,6 +71,96 @@ Login → Create Products → View Orders → Update Order Status → Check Anal
 
 ---
 
+## 🚀 DEPLOYMENT & SETUP
+
+### Docker Containerization
+
+The backend is containerized using Docker for easy deployment and consistent environments across different platforms:
+
+**Dockerfile Features:**
+- Multi-stage build for optimized image size
+- Java 17 runtime environment
+- Maven for dependency management
+- Automated build and packaging
+- Production-ready configuration
+
+**To run locally with Docker:**
+```bash
+# Build the Docker image
+docker build -t webwares-backend .
+
+# Run the container
+docker run -p 8080:8080 webwares-backend
+```
+
+---
+
+### Cloud Deployment (Render.com)
+
+The entire backend API is deployed on **Render.com** and is live at:
+```
+https://webwares.onrender.com/api
+```
+
+**Deployment Features:**
+- ✅ Automatic deployments from Git repository
+- ✅ Environment variable management for secrets
+- ✅ MongoDB Atlas integration for database
+- ✅ HTTPS/SSL enabled by default
+- ✅ Auto-scaling and load balancing
+- ✅ Health checks and monitoring
+- ✅ Zero-downtime deployments
+
+**Environment Variables Configured:**
+- `MONGODB_URI` - MongoDB connection string
+- `JWT_SECRET` - Secret key for JWT tokens
+- `RAZORPAY_KEY_ID` - Razorpay API key
+- `RAZORPAY_KEY_SECRET` - Razorpay secret key
+- `CORS_ORIGINS` - Allowed frontend origins
+
+---
+
+### Frontend Repository
+
+The React + Vite frontend is hosted separately:
+
+**Repository:** [https://github.com/Shaikh-Suja-Rahaman/webwares-frontend](https://github.com/Shaikh-Suja-Rahaman/webwares-frontend)
+
+**Frontend Tech Stack:**
+- React 18 with Hooks
+- Vite for fast development and building
+- React Router for navigation
+- Axios for API calls
+- Tailwind CSS for styling
+- State management with Context API
+
+**To run frontend locally:**
+```bash
+# Clone the frontend repository
+git clone https://github.com/Shaikh-Suja-Rahaman/webwares-frontend.git
+
+# Navigate to project directory
+cd webwares-frontend
+
+# Install dependencies
+npm install
+
+# Create .env file with backend URL
+echo "VITE_API_BASE_URL=https://webwares.onrender.com/api" > .env
+
+# Start development server
+npm run dev
+```
+
+**Frontend will run on:** `http://localhost:5173`
+
+**Production Build:**
+```bash
+npm run build
+```
+
+---
+
 ## Setup
 
 **Base URL:** `https://webwares.onrender.com/api`
